@@ -508,18 +508,18 @@ class Boid(object):
 
     perception_radius = 50
 
-    separation_factor = 0.5
-    cohesion_factor = 1.5
-    align_factor = 0.25
+    separation_factor = 0.25
+    cohesion_factor = 2
+    align_factor = 1
 
     def __init__(self):
         # self.position = Vector(WIDTH / 2, HEIGHT / 2)
         self.position = Vector(randint(0, WIDTH), randint(0, HEIGHT))
-        self.velocity = Vector(uniform(-16, 16), uniform(-16, 16))
+        self.velocity = Vector(uniform(-32, 32), uniform(-32, 32))
         self.acceleration = Vector()
 
-        self.max_force = .25
-        self.max_speed = 5
+        self.max_force = .5
+        self.max_speed = 8
 
         self.update()
 
@@ -590,10 +590,10 @@ class Boid(object):
                 separation_vector.limit(self.max_force)
 
 
-        self.acceleration += (separation_vector * self.separation_factor)
-        self.acceleration += (align_vector * self.align_factor)
-        self.acceleration += (cohesion_vector * self.cohesion_factor)
-        self.acceleration += Vector(uniform(-.5, .5), uniform(-.5, .5))
+        self.acceleration -= (separation_vector * self.separation_factor)
+        self.acceleration -= (align_vector * self.align_factor)
+        self.acceleration -= (cohesion_vector * self.cohesion_factor)
+        self.acceleration -= Vector(uniform(-.25, .25), uniform(-.25, .25))
         return
 
     def update(self):
@@ -617,7 +617,7 @@ class Boid(object):
         """
 
         pygame.draw.circle(surface,
-                           (0, 255, 0),
+                           (128, 255, 255),
                            (int(self.position.x_coord),
                             int(self.position.y_coord)),
                            4, 0)
@@ -639,7 +639,7 @@ if __name__ == "__main__":
 
     pygame.init()
 
-    WIDTH = 1000
+    WIDTH = 1600
     HEIGHT = 800
 
     WIN = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -649,17 +649,17 @@ if __name__ == "__main__":
     RUN = True
 
     FLOCK = []
-    for i in range(32):
+    for i in range(64):
         FLOCK.append(Boid())
 
     while RUN:
-        pygame.time.delay(int(1000/50))
+        pygame.time.delay(int(1000/60))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 RUN = False
 
-        WIN.fill((50, 50, 75))
+        WIN.fill((0, 0, 32))
 
         # OLD_FLOCK = FLOCK
         for boid in FLOCK:
