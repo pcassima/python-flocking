@@ -620,7 +620,7 @@ class Boid(object):
                            (128, 255, 255),
                            (int(self.position.x_coord),
                             int(self.position.y_coord)),
-                           4, 0)
+                           3, 0)
 
         # Un-comment this block to see the perception radius around each boid.
 
@@ -639,8 +639,8 @@ if __name__ == "__main__":
 
     pygame.init()
 
-    WIDTH = 1600
-    HEIGHT = 800
+    WIDTH = 800
+    HEIGHT = 600
 
     WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 
@@ -649,7 +649,7 @@ if __name__ == "__main__":
     RUN = True
 
     FLOCK = []
-    for i in range(64):
+    for i in range(80):
         FLOCK.append(Boid())
 
     while RUN:
@@ -661,9 +661,9 @@ if __name__ == "__main__":
 
         WIN.fill((0, 0, 32))
 
-        # OLD_FLOCK = FLOCK
+        OLD_FLOCK = FLOCK
         for boid in FLOCK:
-            boid.flock(FLOCK)
+            boid.flock(OLD_FLOCK)
             boid.update()
             boid.edges()
             boid.show(WIN)
