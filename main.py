@@ -6,6 +6,7 @@ Still have to write the docstring.
 
 import math
 from random import randint
+from random import uniform
 
 import pygame
 
@@ -60,6 +61,90 @@ class Vector(object):
 
             else:
                 # If they do not have the same coordinates, they are not equals.
+                return False
+
+        else:
+            # If the other object is not a vector raise TypeError.
+            raise TypeError(
+                "Expected Vector object for comparison, got{}".format(type(other)))
+
+    def __lt__(self, other):
+        """
+        Method called when the '<' operator is used on the object.
+        """
+
+        if isinstance(other, Vector):
+            magnitude1, _ = self.cartesian_to_polar(self.x_coord, self.y_coord)
+            magnitude2, _ = other.cartesian_to_polar(
+                other.x_coord, other.y_coord)
+
+            if magnitude1 < magnitude2:
+                return True
+
+            else:
+                return False
+
+        else:
+            # If the other object is not a vector raise TypeError.
+            raise TypeError(
+                "Expected Vector object for comparison, got{}".format(type(other)))
+
+    def __le__(self, other):
+        """
+        Method called when the '<=' operator is used on the object.
+        """
+
+        if isinstance(other, Vector):
+            magnitude1, _ = self.cartesian_to_polar(self.x_coord, self.y_coord)
+            magnitude2, _ = other.cartesian_to_polar(
+                other.x_coord, other.y_coord)
+
+            if magnitude1 <= magnitude2:
+                return True
+
+            else:
+                return False
+
+        else:
+            # If the other object is not a vector raise TypeError.
+            raise TypeError(
+                "Expected Vector object for comparison, got{}".format(type(other)))
+
+    def __gt__(self, other):
+        """
+        Method called when the '>' operator is used on the object.
+        """
+
+        if isinstance(other, Vector):
+            magnitude1, _ = self.cartesian_to_polar(self.x_coord, self.y_coord)
+            magnitude2, _ = other.cartesian_to_polar(
+                other.x_coord, other.y_coord)
+
+            if magnitude1 > magnitude2:
+                return True
+
+            else:
+                return False
+
+        else:
+            # If the other object is not a vector raise TypeError.
+            raise TypeError(
+                "Expected Vector object for comparison, got{}".format(type(other)))
+
+    def __ge__(self, other):
+        """
+        Method called when the '>=' operator is used on the object.
+        """
+
+        if isinstance(other, Vector):
+            magnitude1, _ = self.cartesian_to_polar(self.x_coord, self.y_coord)
+            magnitude2, _ = other.cartesian_to_polar(
+                other.x_coord, other.y_coord)
+
+            if magnitude1 >= magnitude2:
+                return True
+
+            else:
                 return False
 
         else:
@@ -164,12 +249,8 @@ class Vector(object):
         Returns:
             Vector -- A vector object with the new coordinates.
         """
-        if isinstance(other, Vector):
-            # If the other object is another vector, multiply the coordinates.
-            x_res = self.x_coord * other.x_coord
-            y_res = self.y_coord * other.y_coord
 
-        elif isinstance(other, (int, float)):
+        if isinstance(other, (int, float)):
             # If the other object is a scalar, multiply the coordinates by the value.
             x_res = self.x_coord * other
             y_res = self.y_coord * other
@@ -177,15 +258,18 @@ class Vector(object):
         else:
             # If the other object has a different type than what we expected, raise an error.
             raise TypeError(
-                "Expected Vector, int or float, got{}".format(type(other)))
+                "Expected int or float, got{}".format(type(other)))
 
         # Return a vector object with the new coordinates.
         return Vector(x_res, y_res)
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         if isinstance(other, (int, float)):
-            x_res = self.x_coord / other
-            y_res = self.y_coord / other
+            if other != 0:
+                x_res = self.x_coord / other
+                y_res = self.y_coord / other
+            else:
+                raise ValueError("Cannot divide by zero!")
 
             return Vector(x_res, y_res)
         else:
@@ -296,6 +380,7 @@ class Vector(object):
 
         self.x_coord = x_temp
         self.y_coord = y_temp
+
         return
 
     def get_direction(self):
@@ -320,6 +405,17 @@ class Vector(object):
 
         return (self.x_coord, self.y_coord)
 
+    def normalize(self):
+        """
+        Method to return a normalized vector with magnitude one.
+        """
+
+        _, direction = self.cartesian_to_polar(self.x_coord, self.y_coord)
+
+        x_val, y_val = self.polar_to_cartesian(1, direction)
+
+        return Vector(x_val, y_val)
+
     @staticmethod
     def cartesian_to_polar(x_val: [int, float] = 0, y_val: [int, float] = 0):
         """
@@ -339,7 +435,7 @@ class Vector(object):
             # The magnitude is calculated using the pythagorean theorem.
             magnitude = math.sqrt((x_val ** 2) + (y_val ** 2))
             # The angle is calculated using the arc tangent.
-            theta = math.atan(x_val / y_val)
+            theta = math.atan(y_val / x_val)
 
             if x_val < 0:
                 # If x is smaller than zero add 180 degrees to the angle (in radians).
@@ -353,7 +449,7 @@ class Vector(object):
         elif x_val == 0 and y_val != 0:
             # If x is zero, the vector is pointing either up or down.
             # The magnitude is then depending on the y value.
-            magnitude = y_val
+            magnitude = abs(y_val)
             if y_val > 0:
                 # If y is positive the angle is 90 degrees.
                 theta = math.pi / 2
@@ -364,7 +460,7 @@ class Vector(object):
         elif x_val != 0 and y_val == 0:
             # If y is zero, the vector is pointing either left or right.
             # The magnitude is then depending on the x value.
-            magnitude = x_val
+            magnitude = abs(x_val)
             if x_val > 0:
                 # If x is positive the angle is 0 degrees.
                 theta = 0
@@ -404,25 +500,28 @@ class Vector(object):
         return x_val, y_val
 
 
+
 class Boid(object):
     """
     Class to represent boids for the flocking algorithm.
     """
 
-    perception_radius = 150
+    perception_radius = 50
 
-    separation_factor = 0.75
+    separation_factor = 0.5
     cohesion_factor = 1.5
-    align_factor = 0.5
+    align_factor = 0.25
 
     def __init__(self):
-        # self.position = Vector(width / 2, height / 2)
+        # self.position = Vector(WIDTH / 2, HEIGHT / 2)
         self.position = Vector(randint(0, WIDTH), randint(0, HEIGHT))
-        self.velocity = Vector(randint(-16, 16), randint(-16, 16))
+        self.velocity = Vector(uniform(-16, 16), uniform(-16, 16))
         self.acceleration = Vector()
 
-        self.max_force = .4
-        self.max_speed = 8
+        self.max_force = .25
+        self.max_speed = 5
+
+        self.update()
 
     def edges(self):
         """
@@ -468,41 +567,43 @@ class Boid(object):
 
                     difference = self.position - other.position
                     if distance > 0:
-                        difference.__div__(distance)
+                        difference /= distance
+                        separation_vector += difference
                     counter += 1
-                    separation_vector += difference
 
-        if counter > 0:
-            align_vector = align_vector.__div__(counter)
-            align_vector.set_magnitude(self.max_speed)
-            align_vector -= self.velocity
-            align_vector.limit(self.max_force)
 
-            cohesion_vector = cohesion_vector.__div__(counter)
-            cohesion_vector -= self.position
-            cohesion_vector.set_magnitude(self.max_speed)
-            cohesion_vector -= self.velocity
-            cohesion_vector.limit(self.max_force)
+            if counter > 0:
+                align_vector /= counter
+                # align_vector.set_magnitude(self.max_speed)
+                align_vector -= self.velocity
+                align_vector.limit(self.max_force)
 
-            separation_vector = separation_vector.__div__(counter)
-            separation_vector.set_magnitude(self.max_speed)
-            separation_vector -= self.velocity
-            separation_vector.limit(self.max_force)
+                cohesion_vector /= counter
+                cohesion_vector -= self.position
+                # cohesion_vector.set_magnitude(self.max_speed)
+                cohesion_vector -= self.velocity
+                cohesion_vector.limit(self.max_force)
+
+                separation_vector /= counter * 2
+                # separation_vector.set_magnitude(self.max_speed)
+                separation_vector -= self.velocity
+                separation_vector.limit(self.max_force)
 
 
         self.acceleration += (separation_vector * self.separation_factor)
         self.acceleration += (align_vector * self.align_factor)
         self.acceleration += (cohesion_vector * self.cohesion_factor)
+        self.acceleration += Vector(uniform(-.5, .5), uniform(-.5, .5))
         return
 
     def update(self):
         """
         Method to update the parametres of a boid.
         """
-
-        self.position += self.velocity
         self.velocity += self.acceleration
         self.velocity.limit(self.max_speed)
+        self.position += self.velocity
+
         self.acceleration = Vector(0, 0)
 
         return
@@ -516,12 +617,13 @@ class Boid(object):
         """
 
         pygame.draw.circle(surface,
-                           (255, 255, 255),
+                           (0, 255, 0),
                            (int(self.position.x_coord),
                             int(self.position.y_coord)),
-                           1, 0)
+                           4, 0)
 
         # Un-comment this block to see the perception radius around each boid.
+
         # pygame.draw.circle(surface,
         #                    (255, 0, 0),
         #                    (int(self.position.x_coord),
@@ -547,23 +649,23 @@ if __name__ == "__main__":
     RUN = True
 
     FLOCK = []
-    for i in range(128):
+    for i in range(32):
         FLOCK.append(Boid())
 
     while RUN:
-        pygame.time.delay(int(1000/60))
+        pygame.time.delay(int(1000/50))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 RUN = False
 
-        WIN.fill((75, 75, 100))
+        WIN.fill((50, 50, 75))
 
-        OLD_FLOCK = FLOCK
+        # OLD_FLOCK = FLOCK
         for boid in FLOCK:
-            boid.edges()
-            boid.flock(OLD_FLOCK)
+            boid.flock(FLOCK)
             boid.update()
+            boid.edges()
             boid.show(WIN)
 
         pygame.display.update()
